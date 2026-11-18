@@ -5,12 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404</title>
     <style>
+      body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
       .content {
     background-image: url(tv-noise.jpg);
     background: linear-gradient(rgba(0,0,0, 0.3) , rgba(0,0,00, 0.3)), url(tv-noise.jpg);
     -webkit-text-fill-color: transparent;
     -webkit-background-clip: text;
-    font-size: 400px;
+    font-size: clamp(110px, 28vw, 400px);
     background-color: rgba(0,0,0, 0.5);
     font-family: poppins;
     animation: animate 0.1s ease-in-out infinite;
@@ -21,22 +29,19 @@
 }
 
 .content span {
-    font-size: 40px;
+    font-size: clamp(18px, 4vw, 40px);
     display: block;
 }
 
 @keyframes animate {
     from {
         left: 0;
-        top:1px;
-        background-position: top 25%;
+        top: 1px;
         background-position: right 50%;
-
     }
     to {
+        left: -1px;
         top: 0;
-        right:1px;
-        background-position: bottom 75%;
         background-position: left 100%;
     }
 }
