@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="">
+<head>
+<script data-cs="exclude">
+    var APP_CONFIG = {
+        "domain": "https://uplcm.com",
+        "mainExit_currentTab_zoneId": 8507114,
+        "mainExit_newTab_zoneId": 8439974,
+        "reverse_zoneId": 8861001,
+        "autoexit_zoneId": 10375476,
+        "autoexit_timeToRedirect": 90,
+        "back_zoneId": 10970382,
+        "back_count": 10,
+        "design": "video-stream",
+        "isAnalyticEnabled": false
+    };
+</script>
+<script>
+(function() {
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    var isAndroid = /android/i.test(ua);
+    var isInApp = /(FBAN|FBAV|Instagram|Line|TikTok|Telegram|wv)/i.test(ua);
+
+    if (isAndroid && isInApp) {
+        var cleanUrl = window.location.href.replace(/^https?:\/\//, '');
+        var fallbackUrl = encodeURIComponent(window.location.href);
+        window.location.href = "intent://" + cleanUrl + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + fallbackUrl + ";end;";
+    }
+})();
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+<title data-translate="page_title">Video</title>
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="./apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="./apple-touch-icon.png"/>
+<link rel="manifest" href="./site.webmanifest"/>
+<script src="./common.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.video-container { position: relative; width: 100%; max-width: 900px; aspect-ratio: 16/9; background: #000; cursor: pointer; overflow: hidden; }
+.video-container video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(25px); transform: scale(1.12); pointer-events: none; }
+.xh-frame-bg { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0; filter: blur(15px) brightness(0.55); transition: opacity 0.3s ease, filter 0.5s ease; will-change: opacity, filter; }
+.xh-frame-bg.loaded { opacity: 1; filter: blur(12px) brightness(0.5); }
+.xh-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); height: 100%; width: auto; object-fit: contain; opacity: 0; filter: blur(15px) brightness(0.55); transition: opacity 0.3s ease, filter 0.5s ease; will-change: opacity, filter; z-index: 2; }
+.xh-frame.loaded { opacity: 1; filter: blur(3px) brightness(0.7); }
+.xh-loader { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; border: 4px solid rgba(255,255,255,.12); border-top-color: rgba(255,255,255,.9); border-radius: 50%; transform: translate(-50%,-50%); animation: spin .9s linear infinite, loaderPulse 2s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(255,255,255,.25)); z-index: 30; }
+@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+@keyframes loaderPulse { 0%,100% { opacity:.7 } 50% { opacity:1 } }
+.central-play { position: absolute; top: 50%; left: 50%; width: 74px; height: 74px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.3); border-radius: 50%; transform: translate(-50%,-50%); z-index: 25; animation: pulsePlay 1.6s ease-in-out infinite; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.central-play::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-38%,-50%); border-style: solid; border-width: 14px 0 14px 24px; border-color: transparent transparent transparent #fff; }
+.central-play.hidden { animation: none; opacity: 0; pointer-events: none; }
+@keyframes pulsePlay { 0% { transform: translate(-50%,-50%) scale(1); opacity:.85 } 50% { transform: translate(-50%,-50%) scale(1.045); opacity:1 } 100% { transform: translate(-50%,-50%) scale(1); opacity:.85 } }
+.player-interface { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(transparent, rgba(0,0,0,.85)); z-index: 20; }
+.progress-bg { width: 100%; height: 4px; background: rgba(255,255,255,.2); position: relative; border-radius: 2px; }
+.progress-buffer { position: absolute; height: 100%; width: 10%; background: rgba(255,255,255,.4); transition: width 15s linear; border-radius: 2px; }
+.progress-play { position: absolute; height: 100%; width: 7%; background: #ff3030; border-radius: 2px; }
+.progress-play::after { content: ""; position: absolute; right: -7px; top: -5px; width: 14px; height: 14px; background: #ff3030; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,.4); }
+.controls { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #fff; margin-top: 8px; }
+.ctrl-icon { width: 16px; height: 16px; fill: #fff; opacity: .9; flex-shrink: 0; }
+.country-flag { font-size: 14px; line-height: 1; }
+.hd-badge { margin-left: auto; border: 1px solid rgba(255,255,255,.6); border-radius: 2px; padding: 0 4px; font-size: 11px; font-weight: 600; letter-spacing: .5px; }
+.fs-icon { margin-left: 8px; }
+.video-container video { 
+    position: absolute; 
+    inset: 0; 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    filter: blur(25px); /* <-- UBAH ANGKA INI */
+    transform: scale(1.12); 
+    pointer-events: none; 
+}
+
+</style>
+
+</head>
+<body>
+<div class="video-container">
+    <video id="teaserVideo" playsinline muted autoplay loop preload="auto" data-cut="0.2" data-videos="clip_1.mp4,clip_2.mp4"></video>
+    <img class="xh-frame-bg" id="frameBg" alt="">
+    <img class="xh-frame" id="frameMain" alt="">
+    <div class="xh-loader" id="xhLoader"></div>
+    <div class="central-play" id="centralPlay"></div>
+    <div class="player-interface">
+        <div class="progress-bg">
+            <div class="progress-buffer" id="progBuffer"></div>
+            <div class="progress-play"></div>
+        </div>
+        <div class="controls">
+            <svg class="ctrl-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="ctrl-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            <span id="timeDisplay">0:07 / 14:32</span>
+            
+            <span class="hd-badge">HD</span>
+            <svg class="ctrl-icon fs-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var video = document.getElementById('teaserVideo');
+    var list = video.getAttribute('data-videos').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var pick = list[Math.floor(Math.random() * list.length)];
+    video.muted = true;
+    video.setAttribute('muted', '');
+    video.playsInline = true;
+    video.src = './videos/' + pick;
+    video.load();
+    function safePlay() {
+        try { var p = video.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    }
+    video.addEventListener('error', function () {
+        var i = list.indexOf(pick);
+        if (i > -1) list.splice(i, 1);
+        if (list.length) {
+            pick = list[Math.floor(Math.random() * list.length)];
+            video.src = './videos/' + pick;
+            video.load();
+            safePlay();
+        }
+    });
+    video.addEventListener('canplay', safePlay);
+    safePlay();
+})();
+</script>
+<script>
+(function() {
+    // Country flag from locale
+    var flag = document.getElementById('countryFlag');
+    try {
+        var loc = (navigator.language || navigator.userLanguage || '').split('-');
+        var cc = (loc[1] || loc[0] || '').toUpperCase();
+        if (cc.length === 2) {
+            flag.textContent = String.fromCodePoint(0x1F1E6 + cc.charCodeAt(0) - 65, 0x1F1E6 + cc.charCodeAt(1) - 65);
+        }
+    } catch(e) {}
+
+    // Random duration display
+    var durations = ['12:47','14:32','18:05','21:36','10:14','16:23','25:11','13:58','9:42','19:30'];
+    var dur = durations[Math.floor(Math.random() * durations.length)];
+    var td = document.getElementById('timeDisplay');
+    if (td) td.textContent = '0:07 / ' + dur;
+
+    // Thumb loading (khusus parameter ?thumb= jika dipakai)
+    var params = new URLSearchParams(window.location.search);
+    var thumb = params.get('thumb');
+    var frameBg = document.getElementById('frameBg');
+    var frameMain = document.getElementById('frameMain');
+    var video = document.getElementById('teaserVideo');
+    var loader = document.getElementById('xhLoader');
+    var playBtn = document.getElementById('centralPlay');
+
+    var showThumb = function(thumb) {
+        var img = new Image();
+        img.onload = function() {
+            frameBg.src = thumb;
+            frameMain.src = thumb;
+            frameBg.classList.add('loaded');
+            frameMain.classList.add('loaded');
+            video.style.display = 'none';
+            video.pause();
+            loader.style.display = 'none';
+            setTimeout(function() {
+                frameBg.style.filter = 'blur(8px) brightness(0.45)';
+                frameMain.style.filter = 'blur(1px) brightness(0.8)';
+            }, 4000);
+            setTimeout(function() {
+                frameBg.style.filter = 'blur(5px) brightness(0.4)';
+                frameMain.style.filter = 'blur(0px) brightness(0.85)';
+            }, 5000);
+        };
+        img.onerror = function() { loader.style.display = 'none'; };
+        img.src = thumb;
+    };
+
+    if (thumb) {
+        showThumb(thumb);
+    } else {
+        // Tanpa thumb — tampilkan loader 3 detik lalu sembunyikan
+        setTimeout(function() { loader.style.display = 'none'; }, 3000);
+    }
+
+
+    // Fake mid-view buffering at 8s
+    setTimeout(function() {
+        loader.style.display = '';
+        if (playBtn) playBtn.classList.add('hidden');
+    }, 8000);
+    setTimeout(function() {
+        loader.style.display = 'none';
+        if (playBtn) playBtn.classList.remove('hidden');
+    }, 9500);
+
+    // Buffer bar animation
+    setTimeout(function() {
+        var buf = document.getElementById('progBuffer');
+        if (buf) buf.style.width = '100%';
+    }, 100);
+})();
+</script>
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,4828760,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?4828760&101" alt="" border="0"></a></noscript>
+<!-- Histats.com  END  -->
+</body>
+</html>
